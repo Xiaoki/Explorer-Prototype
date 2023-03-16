@@ -1,4 +1,4 @@
-# Odyssey-Prototyping-Template
+# Odyssey Explorer Prototype
  This template project is build with webpack, typescript and babylon.js.
 
 ## Instructions
@@ -12,6 +12,10 @@ To demo your protoype run `npm run build` in the terminal. This will create all 
 
 ## Current features
 The project currently consist of the following features
+- Animation with Gsap.
+- Player controller.
+- Universe Generation with instanced Meshes
+- Pop-up menu to locate Odysseys.
 - Basic skybox
 - Custom player controller with a Wisp and WASD input.
 - Webpack intergration to quickly build a the project to demo your ideas.
