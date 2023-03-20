@@ -8,7 +8,7 @@ import {
     Image,
     StackPanel,
 } from 'babylonjs-gui';
-import { Vector3 } from 'babylonjs';
+import { AbstractMesh, TransformNode, Vector3 } from 'babylonjs';
 import {canvas, scene, engine, player, getRandomOdyssey, GetTargetPosition, camera, GetLookAtDirection } from './init';
 import { FlyToPosition } from './animations';
 
@@ -20,6 +20,8 @@ import smallprofile from '../assets/small_profile.png';
 import profileImageLink from '../assets/profileimage.png'
 import { random } from 'gsap';
 import { getQuaternion } from 'babylonjs-loaders/glTF/2.0/glTFLoaderAnimation';
+import { PlayerController } from './PlayerController';
+import { Odyssey } from './odyssey';
 
 export class UIController 
 {
@@ -191,9 +193,9 @@ export class UIController
                 
             }
             // Fly to the odyssey that is randomly returned.
-            const testtarget : Vector3 = getRandomOdyssey().absolutePosition;
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, testtarget));
-            player.RotateCameraTowardsTarget(player.camera, testtarget);
+            const testtarget  : TransformNode= getRandomOdyssey();
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, testtarget.absolutePosition));
+            player.RotateCameraTowardsTarget(testtarget);
             
 
         })
@@ -239,7 +241,9 @@ export class UIController
                 
             }
             // Fly to the odyssey that is randomly returned.
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
+            const testtarget = getRandomOdyssey()
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, testtarget.absolutePosition));
+            player.RotateCameraTowardsTarget(testtarget);
         })
                 
         // small highlight button 2x
@@ -259,7 +263,9 @@ export class UIController
                 
             }
             // Fly to the odyssey that is randomly returned.
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
+            const testtarget = getRandomOdyssey()
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, testtarget.absolutePosition));
+            player.RotateCameraTowardsTarget(testtarget);
         })
 
         highlightContainer1.addControl(smallHighlight1);
@@ -305,7 +311,7 @@ export class UIController
                 
             }
             // Fly to the odyssey that is randomly returned.
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
         })
                 
         // small highlight button 2x
@@ -326,7 +332,9 @@ export class UIController
                 
             }
             // Fly to the odyssey that is randomly returned.
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
+            const testtarget = getRandomOdyssey()
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, testtarget.absolutePosition));
+            player.RotateCameraTowardsTarget(testtarget);
         })
 
         highlightContainer2.addControl(smallHighlight4);
@@ -453,7 +461,9 @@ export class UIController
         enterButton.color = '#f5f5f5'
         enterButton.onPointerUpObservable.add( () => {
             // Fly to the odyssey that is randomly returned.
-            FlyToPosition(player.camera, GetTargetPosition(camera.globalPosition, getRandomOdyssey().absolutePosition));
+            const testtarget = getRandomOdyssey()
+            FlyToPosition(PlayerController.camera, GetTargetPosition(camera.globalPosition, testtarget.absolutePosition));
+            player.RotateCameraTowardsTarget(testtarget);
 
 
         })

@@ -41,7 +41,7 @@ module.exports = {
             },
 
             {
-                test: /\.(glb|gltf|jpg|jpeg|png)$/,
+                test: /\.(glb|gltf|jpg|jpeg|png|hdr)$/,
                 type: 'asset/resource',
                 generator: {
                     filename: (name) => {

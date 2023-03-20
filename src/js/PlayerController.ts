@@ -1,5 +1,5 @@
-import { Engine, UniversalCamera, Scene, Vector3, Mesh, MeshBuilder, PBRMaterial, Texture, Color3, StandardMaterial, KeyboardEventTypes, PointerEventTypes, KeyboardInfo, DeviceSourceManager, DeviceType, Quaternion } from "babylonjs";
-import glassTexture from '../assets/wispReflection.jpg';
+import { HDRCubeTexture, Engine, UniversalCamera, Scene, Vector3, Mesh, MeshBuilder, PBRMaterial, Texture, Color3, StandardMaterial, KeyboardEventTypes, PointerEventTypes, KeyboardInfo, DeviceSourceManager, DeviceType, Quaternion, AbstractMesh, TransformNode } from "babylonjs";
+import hdrImageTexture from '../assets/test.hdr';
 import { objectsWithUpdate } from "./init";
 
 
@@ -7,7 +7,7 @@ export class PlayerController {
     
     scene : Scene;
     canvas : HTMLCanvasElement;
-    camera : UniversalCamera;
+    static camera : UniversalCamera;
     engine : Engine;
     playerMesh : Mesh;
     baseMovementSpeed : number = .5;
@@ -16,7 +16,7 @@ export class PlayerController {
     wispAnimationSpeedY: number = 0.001;
     wispAnimationSpeedX: number = 0.002;
     wispMaterial : PBRMaterial;
-    wispReflectionTexture : Texture;
+    wispReflectionTexture : HDRCubeTexture;
 
 
 
@@ -29,12 +29,12 @@ export class PlayerController {
         
 
         // Setup first person camera for the whisp.
-        this.camera = new UniversalCamera('PlayerCamera', new Vector3(0, 10, -20));
+        PlayerController.camera = new UniversalCamera('PlayerCamera', new Vector3(0, 10, -20));
         this.setupPlayerCamera();
 
         // Create player wisp material and mesh.
         this.playerMesh = MeshBuilder.CreateSphere('wisp', { segments: 32, diameter: 1}, scene);
-        this.wispReflectionTexture = new Texture(glassTexture, scene)
+        this.wispReflectionTexture = new HDRCubeTexture(hdrImageTexture, this.scene, 512, false, true, false, true);
         this.wispMaterial = new PBRMaterial("glassMaterial", scene);
         this.setupPlayerWisp();
 
@@ -54,10 +54,10 @@ export class PlayerController {
             
                 case KeyboardEventTypes.KEYDOWN:
                  
-                    if(inputInfo.event.code == "ShiftLeft" && this.camera.speed != this.fastMovementSpeed)
+                    if(inputInfo.event.code == "ShiftLeft" && PlayerController.camera.speed != this.fastMovementSpeed)
                     {
                         // Shift is down. Go faster
-                        this.camera.speed = this.fastMovementSpeed;
+                        PlayerController.camera.speed = this.fastMovementSpeed;
                         
                     }
                 
@@ -69,7 +69,7 @@ export class PlayerController {
                     if(inputInfo.event.code == "ShiftLeft")
                     {
                         // Shift key is up. Change speed to normal
-                        this.camera.speed = this.baseMovementSpeed;
+                        PlayerController.camera.speed = this.baseMovementSpeed;
                     }
                     
                     break;
@@ -105,12 +105,11 @@ export class PlayerController {
     setupPlayerWisp = () => {
 
         // Attach player wisp to camera.
-        this.playerMesh.setParent(this.camera);
+        this.playerMesh.setParent(PlayerController.camera);
         this.playerMesh.position = new Vector3(0,-2.5,10);
-
-        // Setup glass material
-        this.wispMaterial.reflectivityTexture= this.wispReflectionTexture;
-        this.wispMaterial.reflectionTexture = this.wispReflectionTexture;
+        
+        
+        this.wispMaterial.reflectionTexture = this.wispReflectionTexture;    
         this.wispMaterial.indexOfRefraction = 0.52;
         this.wispMaterial.alpha = 0.5;
         this.wispMaterial.directIntensity = 0.0;
@@ -118,15 +117,9 @@ export class PlayerController {
         this.wispMaterial.cameraExposure = 0.66;
         this.wispMaterial.cameraContrast = 1.66;
         this.wispMaterial.microSurface = 1;
-        this.wispMaterial.reflectivityColor = new Color3(0.2, 0.2, 0.2);
-        this.wispMaterial.albedoColor = new Color3(0.95, 0.95, 0.95);
-
-        const testMaterial : StandardMaterial = new StandardMaterial('testMaterial', this.scene);
-        testMaterial.diffuseColor = new Color3(0.4,0.5,0.7);
-        testMaterial.diffuseTexture = this.wispReflectionTexture;
-
-        // Assign the glass material to the wisp model.
-        this.playerMesh.material = testMaterial;
+        this.wispMaterial.reflectivityColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+        this.wispMaterial.albedoColor = new BABYLON.Color3(0.95, 0.95, 0.95);
+        this.playerMesh.material = this.wispMaterial;
 
 
     }
@@ -140,16 +133,16 @@ export class PlayerController {
 
         
         // Set camera base speed.
-        this.camera.attachControl(this.canvas, true)  
-        this.camera.speed = this.baseMovementSpeed;
+        PlayerController.camera.attachControl(this.canvas, true)  
+        PlayerController.camera.speed = this.baseMovementSpeed;
         
         // Add WASD movement to the camera.
-            this.camera.keysUpward.push(69);
-            this.camera.keysDownward.push(81);
-            this.camera.keysUp.push(87);
-            this.camera.keysDown.push(83);
-            this.camera.keysLeft.push(65);
-            this.camera.keysRight.push(68);
+            PlayerController.camera.keysUpward.push(69);
+            PlayerController.camera.keysDownward.push(81);
+            PlayerController.camera.keysUp.push(87);
+            PlayerController.camera.keysDown.push(83);
+            PlayerController.camera.keysLeft.push(65);
+            PlayerController.camera.keysRight.push(68);
     }
 
     animateWispMovement = () => {
@@ -162,21 +155,46 @@ export class PlayerController {
     }
 
 
-    RotateCameraTowardsTarget = (camera : UniversalCamera, target : Vector3 ) => {
+    RotateCameraTowardsTarget = (target : TransformNode) => {
 
         // Get direction towards the target/
-        const direction = target.subtract(camera.globalPosition);
+        //const direction : Vector3 = target.subtract(PlayerController.camera.globalPosition).normalize();
 
-        console.log(direction);
-;
+        //this.scene.registerBeforeRender(() => {
+        //    PlayerController.camera.target = Vector3.Lerp(PlayerController.camera.target, target,0.05);
+//
+        //    if (PlayerController.camera.target === target ){
+        //        
+        //    }
+        //});
+
+        //PlayerController.camera.target = target;
+
+        //const matrix = target.getWorldMatrix();
+        //const globalPosition = Vector3.TransformCoordinates
+        PlayerController.camera.setTarget(target.absolutePosition)
+        //PlayerController.camera.target = (target.absolutePosition);
+
     }
+
+
+
+
+
+
 
     // Called Everyframe from the index.ts
     Update = () => {
         
         this.animateWispMovement()  
+        
 
     }
+
+
+
+
+    
 
 
 

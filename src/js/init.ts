@@ -1,8 +1,8 @@
 import sign from '../assets/sign.glb';
-import background from '../assets/ai.png';
 import 'babylonjs-loaders';
 import { PlayerController } from './PlayerController';
 import { BuildTheUniverse } from './buildUnivers';
+import { Odyssey } from './odyssey';
 
 import {
     Engine, 
@@ -22,6 +22,7 @@ import {
     CubeTexture,
     DerivativeBlock,
     Quaternion,
+    TransformNode,
 } from 'babylonjs';
 
 // Import Skybox images
@@ -57,7 +58,7 @@ export const SetupEnvironment = () => {
 
     // Create a new player with a firstperson camera.
     player = new PlayerController(scene, canvas, engine);
-    camera = player.camera;
+    camera = PlayerController.camera;
 
     // Add light to the scene.
     const light = new HemisphericLight('light1', new Vector3(3, 3, 0), scene);
@@ -69,23 +70,18 @@ export const SetupEnvironment = () => {
     BuildTheUniverse();
 
     // show debug inspector.  
-    /*  
+    /* 
     scene.debugLayer.show({
         embedMode: true,
     });
     */
+   
     
   
 };
 
 
 export const LoadModels = () => {
-
-    //Setup Universe Plane image.
-    const universePlaneMaterial : StandardMaterial = new StandardMaterial('UniverseImage', scene);
-    universePlaneMaterial.diffuseTexture = new Texture(background, scene);
-    universePlaneMaterial.specularColor = new Color3(0,0,0);
-    universePlaneMaterial.backFaceCulling = false;
 
 
     //load skybox
@@ -125,17 +121,13 @@ const getCurrentTime = () => {
 }
 
 // Find a random odyssey in the scene and return it.
-export const getRandomOdyssey = () => {
+export const getRandomOdyssey = () : TransformNode => {
     
-    let randomMesh
+    let randomOdyssey : TransformNode
+    const random = Math.floor(Math.random() * scene.transformNodes.length);
+    randomOdyssey = scene.transformNodes[random];
 
-    // Only return if an odyssey was selected.
-    do {
-        const random = Math.floor(Math.random() * scene.meshes.length);
-        randomMesh = scene.meshes[random];
-    } while (randomMesh.metadata.type != 'odyssey')
-
-    return randomMesh;
+    return randomOdyssey;
 
 }
 

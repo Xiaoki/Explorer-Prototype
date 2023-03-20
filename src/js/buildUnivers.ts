@@ -1,5 +1,7 @@
-import { Mesh, MeshBuilder, TransformNode, Vector3 } from 'babylonjs';
+import { AbstractMesh, Color3, HDRCubeTexture, Mesh, MeshBuilder, PBRMaterial, StandardMaterial, TransformNode, Vector3 } from 'babylonjs';
 import {scene, engine, canvas} from './init';
+import hdrImageTexture from '../assets/test.hdr';
+import { Odyssey } from './odyssey';
 
 // Global Odyssey Counter for naming.
 let odysseyCounter : number = 0;
@@ -12,9 +14,7 @@ export const BuildTheUniverse = () => {
 }
 
 
-
-
-const BuildRing = (_amount : number, _ringRadius : number, _ringNumber : number, _baseOdyssey : Mesh) =>
+const BuildRing = (_amount : number, _ringRadius : number, _ringNumber : number, _baseOdyssey : Mesh, _avatarCircle : Mesh) =>
    {
        const ring = new TransformNode('Ring' + _ringNumber, scene);
        const spaceBetweenOddyseys = 360 / _amount;
@@ -29,7 +29,8 @@ const BuildRing = (_amount : number, _ringRadius : number, _ringNumber : number,
            // Calculate radian for circle placement.
            const radian = _Offset * (Math.PI / 180) // Define how many radian per 1 degree. multiply by current offset (xdegrees)//
 
-           const _newOdyssey = _baseOdyssey.createInstance("Odyssey" + odysseyCounter);
+           // const _newOdyssey = _baseOdyssey.createInstance("Odyssey" + odysseyCounter);
+           const _newOdyssey = new Odyssey("Odyssey" + odysseyCounter, scene, _baseOdyssey, _avatarCircle);
            _newOdyssey.metadata = { type: 'odyssey'}
            _newOdyssey.position.x = Math.cos(radian) * (Math.random() * _ringRadius);
            _newOdyssey.position.y = Math.sin(radian) * _ringRadius;
@@ -52,12 +53,26 @@ const BuildAccountLayer = () =>
     let counter : number = 0;
     let row : number = 0;
     let accountsPerRow : number = 20;
-    let numberOfAccounts : number = 1000;
+    let numberOfAccounts : number = 500;
     let spaceBetweenAccounts : number = 10
 
     // Creation of a base sphere for the instanced meshes.
     const baseSphere = MeshBuilder.CreateSphere('Odyssey', {diameter: 1}, scene);
     baseSphere.isVisible = false; // Made the original sphere invisible.
+
+    const hdrTextureAccounts = new HDRCubeTexture(hdrImageTexture, scene, 512, false, true, false, true);
+    const glassMaterial = new PBRMaterial("glass", scene);
+    glassMaterial.reflectionTexture = hdrTextureAccounts;    
+    glassMaterial.indexOfRefraction = 0.52;
+    glassMaterial.alpha = 0.5;
+    glassMaterial.directIntensity = 0.0;
+    glassMaterial.environmentIntensity = 0.7;
+    glassMaterial.cameraExposure = 0.66;
+    glassMaterial.cameraContrast = 1.66;
+    glassMaterial.microSurface = 1;
+    glassMaterial.reflectivityColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+    glassMaterial.albedoColor = new BABYLON.Color3(0.95, 0.95, 0.95);
+    baseSphere.material = glassMaterial;
     
     // Create the instanced meshes and add them to the transform layer ( group )
     for (let index = 0; index < numberOfAccounts; index++) 
@@ -86,7 +101,7 @@ const BuildAccountLayer = () =>
     // Center the accounterLayer in the Universe.
     const offset = (accountsPerRow * spaceBetweenAccounts) / 2; // Calculate total width. Divide by 2 for mid point.
     accountLayer.position.x = accountLayer.position.x - offset; // Apply the offset to the container.
-    accountLayer.position.y = -100;
+    accountLayer.position.y = -50;
     accountLayer.position.z = 200;
 }
 
@@ -94,11 +109,33 @@ const BuildRingsLayer= () => {
 
     // Base variables.
     let AllOdysseyRings = new Array<TransformNode>; 
-    let totalAmountOfOdysseys : number = 2000;
+    let totalAmountOfOdysseys : number = 1000;
     let halfAmountOfOdysseys : number = totalAmountOfOdysseys / 2;
 
-    const baseOdyssey = MeshBuilder.CreateSphere('Odyssey', {diameter: 1}, scene);
-    baseOdyssey.isVisible = false; // Made the original sphere invisible.
+
+    // Create base meshes for the Odyssey.
+    const baseOrb = MeshBuilder.CreateSphere('Odyssey', {diameter: 1}, scene);
+    const avatarCircle = MeshBuilder.CreateDisc('avatarDisc', { radius: 0.3 }, scene)
+
+    // Setup glass material for orb
+    const hdrTexture = new HDRCubeTexture(hdrImageTexture, scene, 512, false, true, false, true);
+    const orbMaterial = new PBRMaterial('orbGlass', scene);
+
+    orbMaterial.reflectionTexture = hdrTexture;    
+    orbMaterial.indexOfRefraction = 0.52;
+    orbMaterial.alpha = 0.5;
+    orbMaterial.directIntensity = 0.0;
+    orbMaterial.environmentIntensity = 0.7;
+    orbMaterial.cameraExposure = 0.66;
+    orbMaterial.cameraContrast = 1.66;
+    orbMaterial.microSurface = 1;
+    orbMaterial.reflectivityColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+    orbMaterial.albedoColor = new BABYLON.Color3(0.95, 0.95, 0.95);
+
+    // Asign materials
+    baseOrb.material = orbMaterial;
+    //avatarCircle.material = orbMaterial;
+
 
     // Calculate amount of Odyssey is next ring.
     let odysseysInThisRing = 12;
@@ -116,7 +153,7 @@ const BuildRingsLayer= () => {
         totalAmountOfOdysseys = totalAmountOfOdysseys - odysseysInThisRing;
         
         // Build the ring.
-        const newRing : TransformNode = BuildRing( odysseysInThisRing, ringRadius, AllOdysseyRings.length, baseOdyssey);
+        const newRing : TransformNode = BuildRing( odysseysInThisRing, ringRadius, AllOdysseyRings.length, baseOrb, avatarCircle);
 
         // Set newRing depth
         newRing.position.z = zValueRing;
@@ -179,9 +216,10 @@ const BuildPath = ( vectorArray : Array<Vector3> ) => {
 
     const pathOptions = {
         points : vectorArray,
-        updateable: false,
+        updateable: true,
     }
 
-    const path = MeshBuilder.CreateLines('Path', pathOptions, scene);
+    const path = MeshBuilder.CreateLines('Example Path', pathOptions, scene);   
+    path.alpha = 0.5;
 
 }

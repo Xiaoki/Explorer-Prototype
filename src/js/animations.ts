@@ -7,6 +7,7 @@ export const FlyToPosition = (object : UniversalCamera, location : Vector3 ) => 
     
     // How long does the animation last.
     const duration : number = 2;
+    
 
     gsap.to(object.position, {
         x: location.x,
