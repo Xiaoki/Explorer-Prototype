@@ -219,7 +219,7 @@ const BuildPath = ( vectorArray : Array<Vector3> ) => {
         updateable: true,
     }
 
-    const path = MeshBuilder.CreateLines('Example Path', pathOptions, scene);   
-    path.alpha = 0.5;
+    //const path = MeshBuilder.CreateLines('Example Path', pathOptions, scene);   
+    // /path.alpha = 0.5;
 
 }
